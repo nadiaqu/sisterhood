@@ -196,7 +196,7 @@ export default function App() {
               <table className="table-minimal">
                 <thead>
                   <tr>
-                    <th>Invoice ID</th>
+                    <th>ID Transaksi</th>
                     <th>Produk</th>
                     <th>Harga Total</th>
                     <th className="text-end">Status</th>
@@ -208,12 +208,12 @@ export default function App() {
                   ) : (
                     transaksi.filter(tx => tx.status !== 'PENDING').map((tx) => (
                       <tr key={tx.transactionId}>
-                        <td className="font-monospace text-muted">INV-{tx.transactionId}</td>
+                        <td className="font-monospace text-muted">{tx.transactionId}</td>
                         <td className="fw-bold text-uppercase">{tx.nama}</td>
                         <td className="fw-bold">Rp {Number(tx.harga).toLocaleString('id-ID')}</td>
                         <td className="text-end">
                           <span className={`badge-minimal ${tx.status === 'PAID' ? 'badge-success' : 'badge-danger'}`}>
-                            {tx.status === 'PAID' ? 'SUCCESS' : 'FAILED'}
+                            {tx.status === 'PAID' ? 'PAID' : 'FAILED'}
                           </span>
                         </td>
                       </tr>

@@ -110,8 +110,9 @@ body {
   font-size: 0.8rem;
   color: var(--text-muted);
   border-bottom: 2px solid var(--text-main);
-  padding: 12px 8px;
-  text-align: left;
+  padding: 16px 8px; /* Padding disamakan dengan td */
+  text-align: center; /* DIUBAH KE CENTER */
+  letter-spacing: 1px;
 }
 
 .table-minimal td {
@@ -119,6 +120,7 @@ body {
   padding: 16px 8px;
   font-size: 0.95rem;
   color: var(--text-main);
+  text-align: center; /* DIUBAH KE CENTER */
 }
 
 /* Badge Status Berwarna Pastel */

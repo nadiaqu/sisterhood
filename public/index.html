@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toko Modern (REST to SOAP)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; }
+    .navbar-brand { font-weight: bold; letter-spacing: 1px; }
+    .card { transition: transform 0.2s, box-shadow 0.2s; border: none; }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(13, 110, 253, 0.15); }
+    #statusContainer { display: none; } /* Disembunyikan sampai ada transaksi */
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
+    <div class="container">
+      <span class="navbar-brand mb-0 h1">🛒 TechStore Integration</span>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="statusContainer" class="alert shadow-sm" role="alert">
+      <div class="d-flex align-items-center">
+        <div id="loadingSpinner" class="spinner-border spinner-border-sm me-3 d-none" role="status"></div>
+        <strong id="statusText">Status Transaksi akan muncul di sini...</strong>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+      <h4 class="text-secondary">Katalog Produk (JSON)</h4>
+    </div>
+
+    <div class="row g-4" id="katalog">
+      </div>
+  </div>
+
+  <script>
+    // 1. Ambil data produk saat web pertama kali dibuka
+    fetch('/api/produk')
+      .then(res => res.json())
+      .then(data => {
+        const div = document.getElementById('katalog');
+        data.forEach(p => {
+          div.innerHTML += `
+            <div class="col-md-6 col-lg-4">
+              <div class="card h-100 shadow-sm border-top border-primary border-3">
+                <div class="card-body text-center mt-3">
+                  <h5 class="card-title fw-bold">${p.nama}</h5>
+                  <h4 class="text-primary my-3">Rp ${p.harga.toLocaleString('id-ID')}</h4>
+                  <button class="btn btn-outline-primary w-100 mt-2 fw-bold" onclick="checkout(${p.id}, ${p.harga})">
+                    Beli & Bayar (SOAP Bridge)
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      })
+      .catch(err => console.error("Gagal memuat produk:", err));
+
+    // 2. Fungsi Proses Checkout
+    function checkout(id, harga) {
+      const statusContainer = document.getElementById('statusContainer');
+      const statusText = document.getElementById('statusText');
+      const spinner = document.getElementById('loadingSpinner');
+
+      // Tampilkan state "Sedang Memproses"
+      statusContainer.style.display = 'block';
+      statusContainer.className = 'alert alert-info shadow-sm';
+      spinner.classList.remove('d-none');
+      statusText.innerText = 'Meneruskan pesanan JSON ke SOAP Bank...';
+
+      // Kirim data order via REST
+      fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ produk_id: id, harga: harga })
+      })
+      .then(res => res.json())
+      .then(data => {
+        spinner.classList.add('d-none'); // Matikan animasi muter
+        
+        // Ganti warna notifikasi berdasarkan hasil dari Server SOAP
+        if(data.message.includes("Sukses") || data.message.includes("PAID")) {
+          statusContainer.className = 'alert alert-success shadow-sm border-start border-success border-4';
+          statusText.innerHTML = `✅ <b>Sukses!</b> ${data.message}`;
+        } else {
+          statusContainer.className = 'alert alert-danger shadow-sm border-start border-danger border-4';
+          statusText.innerHTML = `❌ <b>Gagal!</b> ${data.message}`;
+        }
+      })
+      .catch(err => {
+        // Jika server mati beneran (timeout/putus koneksi)
+        spinner.classList.add('d-none');
+        statusContainer.className = 'alert alert-danger shadow-sm border-start border-danger border-4';
+        statusText.innerHTML = `⚠️ <b>Error:</b> Tidak dapat terhubung ke jaringan Bank (SOAP API).`;
+      });
+    }
+  </script>
+</body>
+</html>
